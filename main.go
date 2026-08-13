@@ -20,7 +20,7 @@ type Task struct {
 }
 
 func ConnectDB(dbname string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbname)
+	db, err := sql.Open("sqlite", dbname)
 	if err != nil {
 		fmt.Println("Failed to open database:", err)
 		return nil, err
@@ -89,10 +89,24 @@ func CreateTables(db *sql.DB) error {
 	return nil
 }
 
+func CheckTableExistence(tbname string) error {
+	
+}
+
 func PrintTasks() {}
 
 func AddTask() {}
 
 func main() {
+	db, err := ConnectDB("dbzinho.db")
+	if err != nil {
+		fmt.Println("It was not possible to connect to databse.")
+		return
+	}
+	defer db.Close()
+
+	fmt.Println("Connection with database made successfully")
+
+	
 
 }

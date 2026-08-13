@@ -1,4 +1,4 @@
-module github.com/thifariafeliz/todolite
+module github.com/thifariafeliz/TodoLite
 
 go 1.26.5
 
