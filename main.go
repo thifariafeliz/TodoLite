@@ -89,8 +89,23 @@ func CreateTables(db *sql.DB) error {
 	return nil
 }
 
-func CheckTableExistence(tbname string) error {
-	
+func CheckTableExistence(db *sql.DB, tbname string) (bool, error) {
+	sqlTasks := `SELECT name FROM sqlite_master WHERE type='table' and name=?`
+
+	var name string
+	err := db.QueryRow(sqlTasks, tbname).Scan(&name)
+
+	if err == sql.ErrNoRows {
+		fmt.Println("Não existe nenhuma tabela chamada", tbname)
+		return false, err
+	}
+
+	if err != nil {
+		fmt.Println("Failed to check the table existence:", err)
+		return false, err
+	}
+
+	return true, nil
 }
 
 func PrintTasks() {}
@@ -107,6 +122,24 @@ func main() {
 
 	fmt.Println("Connection with database made successfully")
 
-	
+	err = CreateTables(db)
+	if err != nil {
+		fmt.Println("Failed to create tables:", err)
+		return
+	}
+
+	exist, err := CheckTableExistence(db, "tasks")
+	if exist == true {
+		fmt.Println("Tasks table exists")
+	}
+	exist, err = CheckTableExistence(db, "domains")
+	if exist == true {
+		fmt.Println("Domains table exists")
+	}
+
+	exist, err = CheckTableExistence(db, "task_domain")
+	if exist == true {
+		fmt.Println("Task_Domain table exist")
+	}
 
 }
