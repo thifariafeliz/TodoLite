@@ -8,15 +8,15 @@ import (
 )
 
 type Domain struct {
-	ID int
 	Name string
+	ID   int
 }
 
 type Task struct {
-	ID int
-	Title string
-	Done bool
-	DomainID int
+	Title    string
+	DomainID []int
+	ID       int
+	Status   bool
 }
 
 func ConnectDB(dbname string) (*sql.DB, error) {
@@ -56,7 +56,7 @@ func CreateTables(db *sql.DB) error {
 		CREATE TABLE IF NOT EXISTS tasks (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT NOT NULL,
-			done BOOL NOT NULL
+			status BOOL NOT NULL
 		);
 
 		CREATE TABLE IF NOT EXISTS domains (
@@ -108,9 +108,47 @@ func CheckTableExistence(db *sql.DB, tbname string) (bool, error) {
 	return true, nil
 }
 
-func PrintTasks() {}
+func TakeTasksByStatus(db *sql.DB, done bool) ([]Task, error) {
+	sql := ``
 
-func AddTask() {}
+	if done {
+		sql = `SELECT * FROM tasks WHERE done=true;`
+	} else {
+		sql = `SELECT * FROM tasks WHERE done=false;`
+	}
+
+	rows, err := db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []Task
+
+	for rows.Next() {
+		var task Task
+		if err := rows.Scan(&task.ID, &task.Title, &task.DomainID, &task.Done); err != nil {
+			return tasks, err
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	if err = rows.Err(); err != nil {
+		return tasks, err
+	}
+
+	return tasks, nil
+}
+
+func AddTask(db *sql.DB, task Task) (int64, error) {
+	result, err := db.Exec("INSERT INTO tasks (title, status) VALUES (?, ?);", task.Title, task.Status)
+	if err != nil {
+		return 
+	}
+
+	return nil
+}
 
 func main() {
 	db, err := ConnectDB("dbzinho.db")
