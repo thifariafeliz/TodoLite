@@ -127,7 +127,7 @@ func TakeTasksByStatus(db *sql.DB, done bool) ([]Task, error) {
 
 	for rows.Next() {
 		var task Task
-		if err := rows.Scan(&task.ID, &task.Title, &task.DomainID, &task.Done); err != nil {
+		if err := rows.Scan(&task.ID, &task.Title, &task.DomainID, &task.Status); err != nil {
 			return tasks, err
 		}
 
@@ -141,13 +141,39 @@ func TakeTasksByStatus(db *sql.DB, done bool) ([]Task, error) {
 	return tasks, nil
 }
 
+// Adds a task to the database
 func AddTask(db *sql.DB, task Task) (int64, error) {
+	// adds a task to the database
 	result, err := db.Exec("INSERT INTO tasks (title, status) VALUES (?, ?);", task.Title, task.Status)
 	if err != nil {
-		return 
+		return 0, fmt.Errorf("AddTask: %v", err)
 	}
 
-	return nil
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("AddTask: %v", err)
+	}
+
+	return id, nil
+}
+
+// Adds domains to the domains' table
+func AddDomain(db *sql.DB, domains []Domain) (int64, error) {
+	domainNo := 0
+	for i := 0; i < len(domains); i++ {
+		// Checks if the domain beeing iterated is already in the table
+		if err := db.QueryRow("SELECT COUNT(id) FROM domains WHERE name = '?'", domains[i].Name).Scan(&domainNo); err != nil {
+			// If there is a row, then continue
+			if err != sql.ErrNoRows {
+				continue
+			}
+
+			if domainNo == 0 {
+				result, err := db.Exec("INSERT INTO domains (name) VALUES (?);", domains[i].Name)
+
+			}
+		}
+	}
 }
 
 func main() {
