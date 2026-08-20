@@ -160,6 +160,7 @@ func AddTask(db *sql.DB, task Task) (int64, error) {
 // Adds domains to the domains' table
 func AddDomain(db *sql.DB, domains []Domain) (int64, error) {
 	domainNo := 0
+	var id int64
 	for i := 0; i < len(domains); i++ {
 		// Checks if the domain beeing iterated is already in the table
 		if err := db.QueryRow("SELECT COUNT(id) FROM domains WHERE name = '?'", domains[i].Name).Scan(&domainNo); err != nil {
@@ -167,12 +168,36 @@ func AddDomain(db *sql.DB, domains []Domain) (int64, error) {
 			if err != sql.ErrNoRows {
 				continue
 			}
-
-			if domainNo == 0 {
-				result, err := db.Exec("INSERT INTO domains (name) VALUES (?);", domains[i].Name)
-
-			}
+			return 0, err
 		}
+
+		if domainNo == 0 {
+			result, err := db.Exec("INSERT INTO domains (name) VALUES (?);", domains[i].Name)
+			if err != nil {
+				return 0, err
+			}
+
+			id, err = result.LastInsertId()
+			if err != nil {
+				return 0, err
+			}
+
+			return id, nil
+		}
+	}
+
+	return id, nil
+}
+
+func AddTaskDomain(db *sql.DB, taskID, domainID int) (int64, error) {
+	// Need to add the taskID and domainID to the table of task_domain
+	// 
+
+	sqlExists := `SELECT COUNT(task_id) FROM task_domain WHERE task_id=? AND domain_id=?`
+	
+	exists := 0
+	if err := db.QueryRow(sqlExists, taskID, domainID).Scan(&exists); err != nil {
+		
 	}
 }
 
@@ -205,5 +230,7 @@ func main() {
 	if exist == true {
 		fmt.Println("Task_Domain table exist")
 	}
+
+	task := Task{Title: "Limpar machucado.", Status: false}
 
 }
